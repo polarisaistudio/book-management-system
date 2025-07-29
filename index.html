@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input, select, button {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a4190);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .book-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .book-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .book-author {
+            color: #666;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .book-details {
+            font-size: 0.9em;
+            color: #777;
+            margin-bottom: 15px;
+        }
+
+        .book-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-AVAILABLE { background: #d4edda; color: #155724; }
+        .status-CHECKED_OUT { background: #f8d7da; color: #721c24; }
+        .status-RESERVED { background: #fff3cd; color: #856404; }
+        .status-MAINTENANCE { background: #e2e3e5; color: #383d41; }
+
+        .book-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.8em;
+            min-width: auto;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffc107, #ff8f00);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .pagination {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+            min-width: auto;
+            padding: 8px 12px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .book-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 Book Management System</h1>
+        
+        <!-- Statistics -->
+        <div class="stats-container" id="statsContainer">
+            <div class="stat-card">
+                <h3 id="totalBooks">0</h3>
+                <p>Total Books</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="availableBooks">0</h3>
+                <p>Available</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="checkedOutBooks">0</h3>
+                <p>Checked Out</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="reservedBooks">0</h3>
+                <p>Reserved</p>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="form-group">
+                <label for="searchTitle">Search Title:</label>
+                <input type="text" id="searchTitle" placeholder="Enter book title...">
+            </div>
+            
+            <div class="form-group">
+                <label for="searchAuthor">Search Author:</label>
+                <input type="text" id="searchAuthor" placeholder="Enter author name...">
+            </div>
+            
+            <div class="form-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="CHECKED_OUT">Checked Out</option>
+                    <option value="RESERVED">Reserved</option>
+                    <option value="MAINTENANCE">Maintenance</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button onclick="searchBooks()">🔍 Search</button>
+            </div>
+            
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button onclick="showAddBookModal()">📖 Add Book</button>
+            </div>
+            
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <button onclick="loadBooks()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results">
+            <div class="loading">Loading books...</div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- Add/Edit Book Modal -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add New Book</h2>
+            
+            <form id="bookForm" onsubmit="saveBook(event)">
+                <div class="form-group">
+                    <label for="bookTitle">Title:</label>
+                    <input type="text" id="bookTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookAuthor">Author:</label>
+                    <input type="text" id="bookAuthor" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookIsbn">ISBN:</label>
+                    <input type="text" id="bookIsbn" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookPrice">Price:</label>
+                    <input type="number" step="0.01" id="bookPrice" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookYear">Publication Year:</label>
+                    <input type="number" id="bookYear">
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookStatus">Status:</label>
+                    <select id="bookStatus">
+                        <option value="AVAILABLE">Available</option>
+                        <option value="CHECKED_OUT">Checked Out</option>
+                        <option value="RESERVED">Reserved</option>
+                        <option value="MAINTENANCE">Maintenance</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="bookDescription">Description:</label>
+                    <input type="text" id="bookDescription">
+                </div>
+                
+                <div style="margin-top: 20px; text-align: center;">
+                    <button type="submit">💾 Save Book</button>
+                    <button type="button" onclick="closeModal()" style="margin-left: 10px; background: #6c757d;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:8080/api/books';
+        let currentPage = 0;
+        let currentEditingId = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBooks();
+            loadStatistics();
+        });
+
+        // Load books with pagination
+        async function loadBooks(page = 0, size = 12) {
+            try {
+                const response = await fetch(`${API_BASE}?page=${page}&size=${size}&sortBy=title&sortDirection=asc`);
+                const data = await response.json();
+                displayBooks(data.content);
+                displayPagination(data);
+                currentPage = page;
+            } catch (error) {
+                console.error('Error loading books:', error);
+                document.getElementById('results').innerHTML = '<div class="error">Error loading books. Please check if the server is running on http://localhost:8080</div>';
+            }
+        }
+
+        // Search books
+        async function searchBooks() {
+            const title = document.getElementById('searchTitle').value;
+            const author = document.getElementById('searchAuthor').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            let url = `${API_BASE}/search?page=0&size=12`;
+            if (title) url += `&title=${encodeURIComponent(title)}`;
+            if (author) url += `&author=${encodeURIComponent(author)}`;
+            if (status) url += `&status=${status}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                displayBooks(data.content);
+                displayPagination(data);
+            } catch (error) {
+                console.error('Error searching books:', error);
+                showError('Error searching books');
+            }
+        }
+
+        // Display books
+        function displayBooks(books) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (books.length === 0) {
+                resultsDiv.innerHTML = '<div class="loading">No books found</div>';
+                return;
+            }
+            
+            const booksHTML = books.map(book => `
+                <div class="book-card">
+                    <div class="book-title">${escapeHtml(book.title)}</div>
+                    <div class="book-author">by ${escapeHtml(book.author)}</div>
+                    <div class="book-details">
+                        <strong>ISBN:</strong> ${book.isbn}<br>
+                        <strong>Price:</strong> $${book.price}<br>
+                        ${book.publicationYear ? `<strong>Year:</strong> ${book.publicationYear}<br>` : ''}
+                        ${book.description ? `<strong>Description:</strong> ${escapeHtml(book.description)}` : ''}
+                    </div>
+                    <div class="book-status status-${book.status}">${book.status.replace('_', ' ')}</div>
+                    <div class="book-actions">
+                        <button class="btn-small" onclick="editBook(${book.id})">✏️ Edit</button>
+                        <button class="btn-small btn-warning" onclick="changeStatus(${book.id}, '${book.status}')">🔄 Status</button>
+                        <button class="btn-small btn-danger" onclick="deleteBook(${book.id})">🗑️ Delete</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            resultsDiv.innerHTML = `<div class="book-grid">${booksHTML}</div>`;
+        }
+
+        // Display pagination
+        function displayPagination(data) {
+            const paginationDiv = document.getElementById('pagination');
+            let paginationHTML = '';
+            
+            if (data.totalPages > 1) {
+                if (!data.first) {
+                    paginationHTML += `<button onclick="loadBooks(${data.number - 1})">Previous</button>`;
+                }
+                
+                for (let i = 0; i < data.totalPages; i++) {
+                    const active = i === data.number ? 'style="background: #333;"' : '';
+                    paginationHTML += `<button ${active} onclick="loadBooks(${i})">${i + 1}</button>`;
+                }
+                
+                if (!data.last) {
+                    paginationHTML += `<button onclick="loadBooks(${data.number + 1})">Next</button>`;
+                }
+            }
+            
+            paginationDiv.innerHTML = paginationHTML;
+        }
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                const response = await fetch(`${API_BASE}/statistics`);
+                const stats = await response.json();
+                
+                document.getElementById('totalBooks').textContent = stats.totalBooks;
+                document.getElementById('availableBooks').textContent = stats.availableBooks;
+                document.getElementById('checkedOutBooks').textContent = stats.checkedOutBooks;
+                document.getElementById('reservedBooks').textContent = stats.reservedBooks;
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Show add book modal
+        function showAddBookModal() {
+            currentEditingId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Book';
+            document.getElementById('bookForm').reset();
+            document.getElementById('bookModal').style.display = 'block';
+        }
+
+        // Edit book
+        async function editBook(id) {
+            try {
+                const response = await fetch(`${API_BASE}/${id}`);
+                const book = await response.json();
+                
+                currentEditingId = id;
+                document.getElementById('modalTitle').textContent = 'Edit Book';
+                document.getElementById('bookTitle').value = book.title;
+                document.getElementById('bookAuthor').value = book.author;
+                document.getElementById('bookIsbn').value = book.isbn;
+                document.getElementById('bookPrice').value = book.price;
+                document.getElementById('bookYear').value = book.publicationYear || '';
+                document.getElementById('bookStatus').value = book.status;
+                document.getElementById('bookDescription').value = book.description || '';
+                
+                document.getElementById('bookModal').style.display = 'block';
+            } catch (error) {
+                console.error('Error loading book for edit:', error);
+                showError('Error loading book details');
+            }
+        }
+
+        // Save book
+        async function saveBook(event) {
+            event.preventDefault();
+            
+            const bookData = {
+                title: document.getElementById('bookTitle').value,
+                author: document.getElementById('bookAuthor').value,
+                isbn: document.getElementById('bookIsbn').value,
+                price: parseFloat(document.getElementById('bookPrice').value),
+                publicationYear: document.getElementById('bookYear').value ? parseInt(document.getElementById('bookYear').value) : null,
+                status: document.getElementById('bookStatus').value,
+                description: document.getElementById('bookDescription').value || null
+            };
+            
+            try {
+                let response;
+                if (currentEditingId) {
+                    response = await fetch(`${API_BASE}/${currentEditingId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookData)
+                    });
+                } else {
+                    response = await fetch(API_BASE, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(bookData)
+                    });
+                }
+                
+                if (response.ok) {
+                    closeModal();
+                    loadBooks(currentPage);
+                    loadStatistics();
+                    showSuccess(currentEditingId ? 'Book updated successfully!' : 'Book added successfully!');
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Error saving book');
+                }
+            } catch (error) {
+                console.error('Error saving book:', error);
+                showError('Error saving book');
+            }
+        }
+
+        // Delete book
+        async function deleteBook(id) {
+            if (!confirm('Are you sure you want to delete this book?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+                
+                if (response.ok) {
+                    loadBooks(currentPage);
+                    loadStatistics();
+                    showSuccess('Book deleted successfully!');
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Error deleting book');
+                }
+            } catch (error) {
+                console.error('Error deleting book:', error);
+                showError('Error deleting book');
+            }
+        }
+
+        // Change book status
+        async function changeStatus(id, currentStatus) {
+            const statuses = ['AVAILABLE', 'CHECKED_OUT', 'RESERVED', 'MAINTENANCE'];
+            const currentIndex = statuses.indexOf(currentStatus);
+            const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+            
+            try {
+                const response = await fetch(`${API_BASE}/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: nextStatus })
+                });
+                
+                if (response.ok) {
+                    loadBooks(currentPage);
+                    loadStatistics();
+                    showSuccess(`Status changed to ${nextStatus.replace('_', ' ')}`);
+                } else {
+                    const error = await response.json();
+                    showError(error.message || 'Error changing status');
+                }
+            } catch (error) {
+                console.error('Error changing status:', error);
+                showError('Error changing status');
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('bookModal').style.display = 'none';
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('bookModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
